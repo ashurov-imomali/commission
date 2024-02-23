@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"main/models"
@@ -38,6 +37,21 @@ func (r *Repository) CreateRules(rules []models.CommissionRules, profileId int64
 	return nil
 }
 
-func (r *Repository) UpdateProfile(c *gin.Context) {
+func (r *Repository) UpdateProfile(profiles *models.CommissionProfiles) (*models.CommissionProfiles, error) {
+	err := r.Db.Model(&models.CommissionProfiles{}).Update(&profiles).Scan(&profiles).Error
+	if err != nil {
+		return nil, err
+	}
+	return profiles, nil
+}
 
+func (r *Repository) DeleteProfile(profiles models.CommissionProfiles) error {
+	if err := r.Db.Model(&models.CommissionProfiles{}).Where("id = ?", profiles.Id).UpdateColumns(map[string]interface{}{
+		"active":     false,
+		"updated_at": profiles.UpdatedAt,
+		"updated_by": profiles.UpdatedBy,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
 }

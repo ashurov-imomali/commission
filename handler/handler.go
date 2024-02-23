@@ -6,6 +6,7 @@ import (
 	"main/db"
 	"main/models"
 	"net/http"
+	"time"
 )
 
 type Handler struct {
@@ -50,6 +51,30 @@ func (h *Handler) UpdateCommissionProfiles(c *gin.Context) {
 	err := c.ShouldBindJSON(&updProfile)
 	if err != nil {
 		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "can't parse to json"})
+		return
+	}
+	var userId int64 = 2
+	now := time.Now()
+	updProfile.UpdatedBy = userId
+	updProfile.UpdatedAt = &now
+
+	if updProfile.Active != nil && *updProfile.Active == false {
+		err := h.Repos.DeleteProfile(updProfile)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "can't delete profile"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
+		return
+	}
+	profile, err := h.Repos.UpdateProfile(&updProfile)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "can't update profile"})
+		return
 	}
 
+	c.JSON(http.StatusOK, profile)
 }
