@@ -44,3 +44,12 @@ func (h *Handler) CreateCommissionProfile(c *gin.Context) {
 	}
 	c.Status(201)
 }
+
+func (h *Handler) UpdateCommissionProfiles(c *gin.Context) {
+	var updProfile models.CommissionProfiles
+	err := c.ShouldBindJSON(&updProfile)
+	if err != nil {
+		log.Println(err)
+	}
+
+}
