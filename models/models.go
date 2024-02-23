@@ -8,7 +8,7 @@ type CommissionRules struct {
 	EndRange   *float64   `gorm:"column:end_range" json:"end_range"`
 	Value      float64    `gorm:"column:value" json:"value"`
 	TypeId     int64      `gorm:"column:type_id" json:"type_id"`
-	Active     bool       `gorm:"active" json:"active"`
+	Active     *bool      `gorm:"active" json:"active"`
 	ProfileId  int64      `gorm:"column:profile_id" json:"profile_id"`
 	CreatedAt  *time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt  *time.Time `gorm:"column:updated_at" json:"updated_at"`

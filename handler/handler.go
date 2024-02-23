@@ -18,7 +18,7 @@ func GetHandler(repository *db.Repository) *Handler {
 }
 
 func (h *Handler) Test(c *gin.Context) {
-	c.String(200, "oook")
+	c.String(200, "ok")
 }
 
 func (h *Handler) CreateCommissionProfile(c *gin.Context) {
@@ -77,4 +77,42 @@ func (h *Handler) UpdateCommissionProfiles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, profile)
+}
+
+func (h *Handler) UpdateCommissionRules(c *gin.Context) {
+	var rules models.CommissionRules
+	err := c.ShouldBindJSON(&rules)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "can't parse 2 json"})
+		return
+	}
+	var userId int64 = 2
+	now := time.Now()
+	err = h.Repos.UpdateProfileRules(rules.ProfileId, userId)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "can't update profile"})
+		return
+	}
+	if rules.Active != nil && *rules.Active == false {
+		if err := h.Repos.DeleteRule(&rules); err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "can't delete rule"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "deleted successful"})
+		return
+	}
+	rules.UpdatedAt = &now
+	updateRules, err := h.Repos.UpdateRules(&rules)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "can't update rules"})
+		return
+	}
+	c.JSON(http.StatusOK, updateRules)
+}
+
+func (h *Handler) GetAllProfiles(c *gin.Context) {
 }
