@@ -1,0 +1,14 @@
+{
+  "profile":
+  {
+    "name": "SomeName",
+    "description": "SomeDescription"
+  },
+  "rules":[
+    {"start_range": 1,
+      "end_range": 50,
+      "value": 5,
+      "type_id": 1
+    }
+  ]
+}
