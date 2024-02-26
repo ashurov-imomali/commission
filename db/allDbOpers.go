@@ -23,8 +23,79 @@ func GetConnection(dbSetting string) (*Repository, error) {
 	return &Repository{Db: db}, nil
 }
 
+func (r *Repository) DeleteProfileAndRules(request *models.ProfileCreatRequest) error {
+	tx := r.Db.Begin()
+	if err := tx.Model(&models.CommissionProfiles{}).Where("id = ?", request.Profile.Id).UpdateColumns(map[string]interface{}{
+		"active":     false,
+		"deleted_at": request.Profile.DeletedAt,
+		"updated_by": request.Profile.UpdatedBy,
+	}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Model(&models.CommissionRules{}).Where("profile_id = ?", request.Profile.Id).
+		UpdateColumns(map[string]interface{}{
+			"active":     false,
+			"deleted_at": time.Now(),
+		}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (r *Repository) UpdateProfileAndRules(request *models.ProfileCreatRequest) error {
+	tx := r.Db.Begin()
+	err := tx.Model(&models.CommissionProfiles{}).Update(&request.Profile).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	for _, rule := range request.Rules {
+		rule.UpdatedAt = new(time.Time)
+		*rule.UpdatedAt = time.Now()
+		if err := tx.Model(&models.CommissionRules{}).Where("id = ?", rule.Id).
+			UpdateColumns(map[string]interface{}{
+				"start_range": rule.StartRange,
+				"end_range":   rule.EndRange,
+				"value":       rule.Value,
+				"type_id":     rule.TypeId,
+				"active":      rule.Active,
+				"updated_at":  time.Now(),
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	tx.Commit()
+	return nil
+}
+
+func (r *Repository) CreateProfileAndRules(request *models.ProfileCreatRequest) error {
+	tx := r.Db.Begin()
+	request.Profile.Active = true
+	if err := tx.Create(&request.Profile).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	for _, rule := range request.Rules {
+		rule.Active = true
+		rule.ProfileId = request.Profile.Id
+		err := tx.Create(&rule).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	tx.Commit()
+	return nil
+}
+
 func (r *Repository) CreateProfile(profiles *models.CommissionProfiles) (int64, error) {
 	//active отправляется
+	profiles.Active = true
 	if err := r.Db.Create(&profiles).Error; err != nil {
 		return 0, nil
 	}
@@ -33,7 +104,7 @@ func (r *Repository) CreateProfile(profiles *models.CommissionProfiles) (int64, 
 
 func (r *Repository) CreateRules(rules []models.CommissionRules, profileId int64) error {
 	for _, rule := range rules {
-		*rule.Active = true
+		rule.Active = true
 		rule.ProfileId = profileId
 		err := r.Db.Create(&rule).Error
 		if err != nil {
@@ -108,7 +179,7 @@ func (r *Repository) GetProfiles(profileName string) ([]models.ProfileResponse, 
 
 func (r *Repository) GetRules(profId int64) ([]models.CommissionRules, error) {
 	var rules []models.CommissionRules
-	if err := r.Db.Model(&models.CommissionRules{}).Where("profile_id = ?", profId).
+	if err := r.Db.Model(&models.CommissionRules{}).Where("profile_id = ? and active = ?", profId, true).
 		Find(&rules).Error; err != nil {
 		return nil, err
 	}
