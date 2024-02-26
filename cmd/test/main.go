@@ -9,13 +9,12 @@ import (
 )
 
 func main() {
-	dbSettings := `host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable`
+	dbSettings := `host=localhost port=5432 user=admin password=admin dbname=mydb sslmode=disable`
 	repos, err := db.GetConnection(dbSettings)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-
 	responses := handler.GetHandler(repos)
 	rout := router.GetRouter(responses)
 
