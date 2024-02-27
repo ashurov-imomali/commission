@@ -3,24 +3,26 @@
     "id": 1,
     "name": "Новое Название профиля",
     "description": "Новое Описание профиля",
-    "active": true,
+    "active": true
   },
   "rules": [
     {
       "id": 1,
+      "index": 4,
       "start_range": 0.0,
       "end_range": 1000.0,
       "value": 0.05,
       "type_id": 1,
-      "active": true,
+      "active": true
     },
     {
       "id": 2,
+      "index": 1,
       "start_range": 1001.0,
       "end_range": null,
       "value": 0.1,
       "type_id": 2,
-      "active": true,
+      "active": true
     }
   ]
 }

@@ -1,5 +1,7 @@
 {
-  "id": 1,
-  "profile_id": 1,
-  "active": false
+  "profile":{
+    "id": 1,
+    "profile_id": 1,
+    "active": false
+  }
 }
